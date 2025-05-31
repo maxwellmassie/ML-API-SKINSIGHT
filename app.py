@@ -9,7 +9,11 @@ import os
 app = Flask(__name__)
 
 # Load model
-model = load_model("finalModel.keras")
+try:
+    model = load_model("finalModel.keras")
+except Exception as e:
+    print(f"Failed to load model: {e}")
+    model = None  # Optional: supaya tidak menyebabkan crash total
 
 # Kelas dan detail
 class_info = {
@@ -53,6 +57,9 @@ def preprocess_image(img, target_size=(224, 224)):
 # Endpoint prediksi
 @app.route("/predict", methods=["POST"])
 def predict():
+    if model is None:
+        return jsonify({"error": "Model is not loaded"}), 500
+
     if "image" not in request.files:
         return jsonify({"error": "No image uploaded"}), 400
 
@@ -79,9 +86,5 @@ def predict():
 def index():
     return "Skin Disease Detection API with details is running."
 
-"""if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
-        debug=False
-    )"""
+if __name__ == "__main__":
+    app.run(debug=True)
