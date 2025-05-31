@@ -3,19 +3,11 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
-import io
 import os
 
 app = Flask(__name__)
 
-# Load model
-try:
-    model = load_model("finalModel.keras")
-except Exception as e:
-    print(f"Failed to load model: {e}")
-    model = None  # Optional: supaya tidak menyebabkan crash total
-
-# Kelas dan detail
+model = None
 class_info = {
     0: {
         "label": "Nail_psoriasis",
@@ -43,6 +35,17 @@ class_info = {
         "saran": "Gunakan tabir surya dan krim pencerah, serta konsultasikan jika tidak membaik."
     }
 }
+
+# Load model secara efisien
+@app.before_first_request
+def load_model_once():
+    global model
+    try:
+        model = load_model("finalModel.keras")
+        print("Model loaded successfully")
+    except Exception as e:
+        print(f"Failed to load model: {e}")
+        model = None
 
 # Preprocessing image
 def preprocess_image(img, target_size=(224, 224)):
@@ -86,5 +89,7 @@ def predict():
 def index():
     return "Skin Disease Detection API with details is running."
 
+# Ubah bagian ini agar cocok untuk Railway
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
